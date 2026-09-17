@@ -8,10 +8,8 @@ type IconName = ComponentProps<typeof Ionicons>['name'];
 
 const TABS: { name: string; title: string; icon: IconName; activeIcon: IconName }[] = [
   { name: 'index', title: 'Home', icon: 'home-outline', activeIcon: 'home' },
-  { name: 'groups', title: 'Groups', icon: 'people-outline', activeIcon: 'people' },
-  { name: 'people', title: 'People', icon: 'person-outline', activeIcon: 'person' },
-  { name: 'activity', title: 'Activity', icon: 'time-outline', activeIcon: 'time' },
-  { name: 'settings', title: 'Settings', icon: 'settings-outline', activeIcon: 'settings' },
+  { name: 'events', title: 'Events', icon: 'calendar-outline', activeIcon: 'calendar' },
+  { name: 'debts', title: 'Debts', icon: 'swap-vertical-outline', activeIcon: 'swap-vertical' },
 ];
 
 export default function TabLayout() {

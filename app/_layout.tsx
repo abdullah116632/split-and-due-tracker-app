@@ -5,10 +5,13 @@ import * as SplashScreen from 'expo-splash-screen';
 import { SQLiteProvider } from 'expo-sqlite';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { DATABASE_NAME, initDatabase } from '@/db';
 import { useColors, useIsDark } from '@/lib/colors';
 import { MeProvider, useMe } from '@/lib/me-context';
+// Registers how reminders are shown while the app is open.
+import '@/lib/notifications';
 
 SplashScreen.preventAutoHideAsync();
 
@@ -29,14 +32,16 @@ export default function RootLayout() {
   };
 
   return (
-    <SQLiteProvider databaseName={DATABASE_NAME} onInit={initDatabase}>
-      <MeProvider>
-        <ThemeProvider value={theme}>
-          <StatusBar style={isDark ? 'light' : 'dark'} />
-          <RootNavigator />
-        </ThemeProvider>
-      </MeProvider>
-    </SQLiteProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SQLiteProvider databaseName={DATABASE_NAME} onInit={initDatabase}>
+        <MeProvider>
+          <ThemeProvider value={theme}>
+            <StatusBar style={isDark ? 'light' : 'dark'} />
+            <RootNavigator />
+          </ThemeProvider>
+        </MeProvider>
+      </SQLiteProvider>
+    </GestureHandlerRootView>
   );
 }
 
@@ -52,13 +57,15 @@ function RootNavigator() {
   return (
     <Stack screenOptions={{ headerShadowVisible: false, headerBackButtonDisplayMode: 'minimal' }}>
       <Stack.Protected guard={!!me}>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="group/[id]" options={{ title: '' }} />
+        <Stack.Screen name="(drawer)" options={{ headerShown: false }} />
+        <Stack.Screen name="event/[id]" options={{ headerShown: false }} />
         <Stack.Screen name="person/[id]" options={{ title: '' }} />
-        <Stack.Screen name="group/new" options={{ presentation: 'modal', title: 'New group' }} />
+        <Stack.Screen name="event/new" options={{ presentation: 'modal', title: 'New event' }} />
         <Stack.Screen name="expense/new" options={{ presentation: 'modal', title: 'Add expense' }} />
         <Stack.Screen name="loan/new" options={{ presentation: 'modal', title: 'Personal debt' }} />
+        <Stack.Screen name="loan/repay" options={{ presentation: 'modal', title: 'Record a return' }} />
         <Stack.Screen name="settle" options={{ presentation: 'modal', title: 'Settle up' }} />
+        <Stack.Screen name="fund" options={{ presentation: 'modal', title: 'Event fund' }} />
         <Stack.Screen name="person/new" options={{ presentation: 'modal', title: 'New person' }} />
       </Stack.Protected>
 

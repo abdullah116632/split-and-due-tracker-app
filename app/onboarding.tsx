@@ -47,7 +47,7 @@ export default function Onboarding() {
         </View>
         <Text className="mt-5 text-3xl font-bold text-slate-900 dark:text-slate-100">Split & Due</Text>
         <Text className="mt-2 text-center text-base leading-6 text-slate-500 dark:text-slate-400">
-          Split group expenses and keep track of money you lend and borrow — all on your phone, no
+          Split event expenses and keep track of money you lend and borrow — all on your phone, no
           account needed.
         </Text>
       </View>

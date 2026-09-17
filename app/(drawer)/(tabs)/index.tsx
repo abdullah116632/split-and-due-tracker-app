@@ -9,11 +9,12 @@ import { Avatar } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, Divider } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/empty-state';
-import { ListRow } from '@/components/ui/list-row';
+import { ListRow, RowIcon } from '@/components/ui/list-row';
 import { PageTitle, Screen, SectionHeader } from '@/components/ui/screen';
 import { listActivity } from '@/db/activity';
 import { getOverview } from '@/db/balances';
-import { listLoansWithDueDate } from '@/db/loans';
+import { listGroups } from '@/db/groups';
+import { listOpenLoansWithDueDate } from '@/db/loans';
 import { listContacts } from '@/db/people';
 import { useColors } from '@/lib/colors';
 import { daysUntil, dueLabel, formatDate } from '@/lib/date';
@@ -25,25 +26,23 @@ export default function Home() {
   const me = useRequiredMe();
   const { data } = useDbQuery(
     async (db) => {
-      const [overview, contacts, recent, dueLoans] = await Promise.all([
+      const [overview, contacts, recent, dueLoans, events] = await Promise.all([
         getOverview(db, me.id),
         listContacts(db),
         listActivity(db, { limit: 5 }),
-        listLoansWithDueDate(db),
+        listOpenLoansWithDueDate(db),
+        listGroups(db),
       ]);
-      // A dated debt is still "open" while the balance with that person points the same way.
-      const upcoming = dueLoans
-        .filter((l) => {
-          const balance = overview.personal[l.person_id] ?? 0;
-          return l.direction === 'lent' ? balance > 0 : balance < 0;
-        })
-        .slice(0, 5);
+      const upcoming = dueLoans.slice(0, 5);
       const balances = contacts
-        .map((p) => ({ person: p, amount: overview.totals[p.id] ?? 0 }))
+        .map((p) => ({ person: p, amount: overview.personal[p.id] ?? 0 }))
         .filter((b) => b.amount !== 0)
         .sort((a, b) => Math.abs(b.amount) - Math.abs(a.amount))
         .slice(0, 5);
-      return { overview, recent, upcoming, balances, hasContacts: contacts.length > 0 };
+      const eventBalances = events
+        .map((e) => ({ event: e, amount: overview.myEventNets[e.id] ?? 0 }))
+        .filter((b) => b.amount !== 0);
+      return { overview, recent, upcoming, balances, eventBalances, hasContacts: contacts.length > 0 };
     },
     [me.id]
   );
@@ -81,10 +80,10 @@ export default function Home() {
       </View>
 
       <View className="flex-row gap-2">
-        <QuickAction icon="receipt-outline" label="Group expense" href="/expense/new" />
+        <QuickAction icon="receipt-outline" label="Add expense" href="/expense/new" />
         <QuickAction icon="arrow-up-outline" label="I lent" href="/loan/new?direction=lent" />
         <QuickAction icon="arrow-down-outline" label="I borrowed" href="/loan/new?direction=borrowed" />
-        <QuickAction icon="swap-horizontal-outline" label="Settle up" href="/settle" />
+        <QuickAction icon="swap-vertical-outline" label="Debts" href="/debts" />
       </View>
 
       {data?.upcoming.length ? (
@@ -104,7 +103,7 @@ export default function Home() {
                         : `You should pay ${loan.person_name}`
                     }
                     subtitle={`${dueLabel(loan.due_date!)} · ${formatDate(loan.due_date!)}`}
-                    onPress={() => router.push(`/person/${loan.person_id}`)}
+                    onPress={() => router.push(`/loan/new?id=${loan.id}`)}
                     right={
                       <Text
                         className={
@@ -112,7 +111,7 @@ export default function Home() {
                             ? 'font-semibold text-rose-600 dark:text-rose-400'
                             : 'font-semibold text-slate-900 dark:text-slate-100'
                         }>
-                        {formatMoney(loan.amount)}
+                        {formatMoney(loan.remaining)}
                       </Text>
                     }
                   />
@@ -123,11 +122,34 @@ export default function Home() {
         </>
       ) : null}
 
+      {data?.eventBalances.length ? (
+        <>
+          <SectionHeader
+            title="Your events"
+            right={<Button title="See all" variant="ghost" size="sm" onPress={() => router.push('/events')} />}
+          />
+          <Card>
+            {data.eventBalances.map(({ event, amount }, i) => (
+              <View key={event.id}>
+                {i > 0 ? <Divider /> : null}
+                <ListRow
+                  left={<RowIcon name="calendar" tone="teal" />}
+                  title={event.name}
+                  subtitle={amount > 0 ? 'you get back' : 'you need to pay'}
+                  onPress={() => router.push(`/event/${event.id}`)}
+                  right={<Amount value={amount} className="text-base" />}
+                />
+              </View>
+            ))}
+          </Card>
+        </>
+      ) : null}
+
       {data?.balances.length ? (
         <>
           <SectionHeader
-            title="Balances"
-            right={<Button title="See all" variant="ghost" size="sm" onPress={() => router.push('/people')} />}
+            title="Personal debts"
+            right={<Button title="See all" variant="ghost" size="sm" onPress={() => router.push('/debts')} />}
           />
           <Card>
             {data.balances.map(({ person, amount }, i) => (
@@ -148,11 +170,6 @@ export default function Home() {
 
       <SectionHeader
         title="Recent activity"
-        right={
-          data?.recent.length ? (
-            <Button title="See all" variant="ghost" size="sm" onPress={() => router.push('/activity')} />
-          ) : null
-        }
       />
       {data && data.recent.length === 0 ? (
         <Card>
@@ -161,10 +178,10 @@ export default function Home() {
             title="Nothing here yet"
             message={
               data.hasContacts
-                ? 'Add a group expense or record money you lent or borrowed.'
-                : 'Start by creating a group for a trip or flat, or record a personal debt.'
+                ? 'Add an event expense or record money you lent or borrowed.'
+                : 'Start by creating an event for a trip or party, or record a personal debt.'
             }
-            action={<Button title="Create a group" icon="people-outline" onPress={() => router.push('/group/new')} />}
+            action={<Button title="Create an event" icon="calendar-outline" onPress={() => router.push('/event/new')} />}
           />
         </Card>
       ) : data ? (

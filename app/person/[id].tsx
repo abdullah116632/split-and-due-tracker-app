@@ -3,7 +3,7 @@ import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { Linking, Pressable, Text, View } from 'react-native';
 
 import { ActivityList } from '@/components/activity-row';
-import { Amount, balanceCaption } from '@/components/ui/amount';
+import { Amount } from '@/components/ui/amount';
 import { Avatar } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Card, Divider } from '@/components/ui/card';
@@ -11,7 +11,7 @@ import { EmptyState } from '@/components/ui/empty-state';
 import { ListRow, RowIcon } from '@/components/ui/list-row';
 import { Screen, SectionHeader } from '@/components/ui/screen';
 import { listActivity } from '@/db/activity';
-import { getOverview } from '@/db/balances';
+import { getAllGroupNets, getPersonalBalances } from '@/db/balances';
 import { listGroupsForPerson } from '@/db/groups';
 import { getPerson } from '@/db/people';
 import { useColors } from '@/lib/colors';
@@ -24,24 +24,24 @@ export default function PersonDetail() {
   const personId = Number(useLocalSearchParams<{ id: string }>().id);
 
   const { data } = useDbQuery(async (db) => {
-    const [person, overview, groups, history] = await Promise.all([
+    const [person, personalBalances, eventNets, groups, history] = await Promise.all([
       getPerson(db, personId),
-      getOverview(db, me.id),
+      getPersonalBalances(db, me.id),
+      getAllGroupNets(db),
       listGroupsForPerson(db, personId),
       listActivity(db, { personalWith: personId }),
     ]);
-    const byGroup = overview.pairwise[personId] ?? {};
     return {
       person,
-      total: overview.totals[personId] ?? 0,
-      personal: overview.personal[personId] ?? 0,
-      groups: groups.map((g) => ({ ...g, amount: byGroup[g.id] ?? 0 })),
+      personal: personalBalances[personId] ?? 0,
+      // Their own position in each event (settled with the event, not with you).
+      groups: groups.map((g) => ({ ...g, amount: eventNets[g.id]?.[personId] ?? 0 })),
       history,
     };
   }, [personId, me.id]);
 
   if (!data) return null;
-  const { person, total, personal, groups, history } = data;
+  const { person, personal, groups, history } = data;
   if (!person) {
     return (
       <Screen>
@@ -87,9 +87,9 @@ export default function PersonDetail() {
         ) : null}
         <View className="mt-4 items-center">
           <Text className="text-sm text-slate-500 dark:text-slate-400">
-            {total > 0 ? `${person.name} owes you` : total < 0 ? `You owe ${person.name}` : 'All settled up'}
+            {personal > 0 ? `${person.name} owes you` : personal < 0 ? `You owe ${person.name}` : 'No personal debts'}
           </Text>
-          <Amount value={total} className="mt-1 text-3xl font-bold" />
+          <Amount value={personal} className="mt-1 text-3xl font-bold" />
         </View>
       </Card>
 
@@ -109,38 +109,35 @@ export default function PersonDetail() {
           onPress={() => router.push(`/loan/new?personId=${person.id}&direction=borrowed`)}
         />
       </View>
-      <Button
-        title="Settle personal balance"
-        icon="swap-horizontal"
-        disabled={personal === 0}
-        onPress={() => router.push(`/settle?personId=${person.id}`)}
-      />
-
-      <SectionHeader title="Breakdown" />
-      <Card>
-        <ListRow
-          left={<RowIcon name="person-outline" tone="slate" />}
-          title="Personal"
-          subtitle={balanceCaption(personal)}
-          right={<Amount value={personal} className="text-base" />}
+      {personal !== 0 ? (
+        <Button
+          title="Record a return in Debts"
+          icon="checkmark-done-outline"
+          variant="ghost"
+          onPress={() => router.push('/debts')}
         />
-        {groups.map((g) => (
-          <View key={g.id}>
-            <Divider />
-            <ListRow
-              left={<RowIcon name="people-outline" tone="teal" />}
-              title={g.name}
-              subtitle={balanceCaption(g.amount)}
-              onPress={() => router.push(`/group/${g.id}`)}
-              right={<Amount value={g.amount} className="text-base" />}
-              chevron
-            />
-          </View>
-        ))}
-      </Card>
-      <Text className="-mt-2 px-1 text-xs leading-4 text-slate-400">
-        Group amounts follow each group’s suggested settle-up plan. Settle them from the group screen.
-      </Text>
+      ) : null}
+
+      {groups.length > 0 ? (
+        <>
+          <SectionHeader title="Events" />
+          <Card>
+            {groups.map((g, i) => (
+              <View key={g.id}>
+                {i > 0 ? <Divider /> : null}
+                <ListRow
+                  left={<RowIcon name="calendar-outline" tone="teal" />}
+                  title={g.name}
+                  subtitle={g.amount > 0 ? 'gets back from the event' : g.amount < 0 ? 'pays to the event' : 'settled'}
+                  onPress={() => router.push(`/event/${g.id}`)}
+                  right={<Amount value={g.amount} className="text-base" />}
+                  chevron
+                />
+              </View>
+            ))}
+          </Card>
+        </>
+      ) : null}
 
       <SectionHeader title="Personal history" />
       {history.length === 0 ? (

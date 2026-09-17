@@ -20,11 +20,18 @@ export type Expense = {
   group_id: number;
   title: string;
   amount: number;
-  paid_by: number;
+  /** Part of the amount paid from the event fund; the rest is in expense_payers. */
+  fund_amount: number;
   split_type: SplitType;
   date: string;
   note: string | null;
   created_at: number;
+};
+
+export type ExpensePayer = {
+  expense_id: number;
+  person_id: number;
+  amount: number;
 };
 
 export type ExpenseSplit = {
@@ -44,6 +51,19 @@ export type Loan = {
   note: string | null;
   date: string;
   due_date: string | null;
+  /** When to show a reminder notification (epoch ms). */
+  reminder_at: number | null;
+  /** Id of the scheduled local notification, if any. */
+  notification_id: string | null;
+  created_at: number;
+};
+
+export type LoanRepayment = {
+  id: number;
+  loan_id: number;
+  amount: number;
+  date: string;
+  note: string | null;
   created_at: number;
 };
 
@@ -58,5 +78,22 @@ export type Payment = {
   created_at: number;
 };
 
-/** Net amounts keyed by person id. Positive = should receive. */
+export type FundEntryKind = 'contribution' | 'refund';
+
+/** Money put into (contribution) or taken back from (refund) an event's fund. */
+export type FundEntry = {
+  id: number;
+  group_id: number;
+  person_id: number;
+  kind: FundEntryKind;
+  amount: number;
+  date: string;
+  note: string | null;
+  created_at: number;
+};
+
+/** Pseudo person id used for the event fund inside net balances. */
+export const FUND_ID = 0;
+
+/** Net amounts keyed by person id (or FUND_ID). Positive = should receive. */
 export type Nets = Record<number, number>;

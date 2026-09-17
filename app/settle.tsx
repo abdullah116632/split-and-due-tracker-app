@@ -24,7 +24,7 @@ import { formatMoney, poishaToInput, toPoisha } from '@/lib/money';
 
 /**
  * Record a settle-up payment.
- * - Group: `?groupId=&from=&to=&amount=` (prefilled from the suggested plan)
+ * - Event: `?groupId=&from=&to=&amount=` (prefilled from the suggested plan)
  * - Personal: `?personId=` (or nothing, then pick a person)
  * - Edit: `?id=`
  */
@@ -68,7 +68,7 @@ export default function SettleForm() {
     });
   }, [db, editId]);
 
-  // Group payments choose among members; personal ones among contacts.
+  // Event payments choose among its people; personal ones among contacts.
   useEffect(() => {
     (async () => {
       if (groupId != null) {
@@ -154,9 +154,10 @@ export default function SettleForm() {
 
       {groupName ? (
         <Text className="text-sm text-slate-500 dark:text-slate-400">
-          Group: <Text className="font-semibold text-slate-700 dark:text-slate-300">{groupName}</Text>
+          Event: <Text className="font-semibold text-slate-700 dark:text-slate-300">{groupName}</Text>
         </Text>
       ) : null}
+
 
       {isPersonal && editId == null ? (
         <View>

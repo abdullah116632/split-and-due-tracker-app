@@ -58,7 +58,7 @@ export default function PersonForm() {
     if (!(await canDeletePerson(db, editId))) {
       Alert.alert(
         "Can't delete",
-        'This person is part of a group or has debts or payments recorded. Remove those first.'
+        'This person is part of an event or has debts or payments recorded. Remove those first.'
       );
       return;
     }

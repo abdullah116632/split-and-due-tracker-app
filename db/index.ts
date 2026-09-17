@@ -18,11 +18,22 @@ export async function initDatabase(db: SQLiteDatabase) {
   for (const migration of migrations) {
     if (migration.version <= currentVersion) continue;
 
-    await db.withExclusiveTransactionAsync(async (tx) => {
-      await tx.execAsync(migration.sql);
-      // PRAGMA doesn't accept bound parameters; version is a trusted integer.
-      await tx.execAsync(`PRAGMA user_version = ${migration.version}`);
-    });
+    // Table rebuilds must run with foreign keys off (it can't be changed inside a
+    // transaction), otherwise DROP TABLE would cascade-delete child rows.
+    if (migration.rebuildsTables) await db.execAsync('PRAGMA foreign_keys = OFF');
+    try {
+      await db.withExclusiveTransactionAsync(async (tx) => {
+        await tx.execAsync(migration.sql);
+        if (migration.rebuildsTables) {
+          const broken = await tx.getAllAsync('PRAGMA foreign_key_check');
+          if (broken.length) throw new Error(`Migration ${migration.version} broke foreign keys`);
+        }
+        // PRAGMA doesn't accept bound parameters; version is a trusted integer.
+        await tx.execAsync(`PRAGMA user_version = ${migration.version}`);
+      });
+    } finally {
+      if (migration.rebuildsTables) await db.execAsync('PRAGMA foreign_keys = ON');
+    }
     currentVersion = migration.version;
   }
 }

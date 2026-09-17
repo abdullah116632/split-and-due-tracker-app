@@ -23,7 +23,7 @@ export default function People() {
   const [search, setSearch] = useState('');
   const { data } = useDbQuery(async (db) => {
     const [contacts, overview] = await Promise.all([listContacts(db), getOverview(db, me.id)]);
-    return contacts.map((p) => ({ person: p, amount: overview.totals[p.id] ?? 0 }));
+    return contacts.map((p) => ({ person: p, amount: overview.personal[p.id] ?? 0 }));
   }, [me.id]);
 
   const q = search.trim().toLowerCase();
@@ -34,7 +34,7 @@ export default function People() {
   return (
     <View className="flex-1">
       <Screen edges={['top']} contentClassName="pb-24">
-        <PageTitle title="People" subtitle="Everyone you split with, lend to or borrow from" />
+        <PageTitle title="People" subtitle="Everyone from your events and personal debts" />
         {data && data.length > 0 ? (
           <TextField
             placeholder="Search by name or phone"

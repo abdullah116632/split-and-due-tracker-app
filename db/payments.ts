@@ -46,3 +46,4 @@ export async function savePayment(db: SQLiteDatabase, input: PaymentInput, id?: 
 export async function deletePayment(db: SQLiteDatabase, id: number) {
   await db.runAsync('DELETE FROM payments WHERE id = ?', id);
 }
+

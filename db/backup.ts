@@ -6,9 +6,12 @@ const TABLES = [
   'expense_groups',
   'group_members',
   'expenses',
+  'expense_payers',
   'expense_splits',
   'loans',
+  'loan_repayments',
   'payments',
+  'fund_entries',
 ] as const;
 
 type Row = Record<string, string | number | null>;
@@ -54,6 +57,31 @@ export async function parseBackup(db: SQLiteDatabase, text: string): Promise<Bac
   if (!data.tables.people?.some((p) => p.is_me === 1)) {
     throw new Error('This backup has no profile in it.');
   }
+  // Backups from before multi-payer expenses: every expense had exactly one payer.
+  if (data.schemaVersion < 2) {
+    data.tables.expense_payers = (data.tables.expenses ?? []).map((e) => ({
+      expense_id: e.id,
+      person_id: e.paid_by,
+      amount: e.amount,
+    }));
+  }
+  // Backups from before the event fund: person-to-person "contributions" become fund entries.
+  if (data.schemaVersion < 3) {
+    const payments = data.tables.payments ?? [];
+    data.tables.fund_entries = payments
+      .filter((p) => p.kind === 'contribution')
+      .map((p) => ({
+        id: p.id,
+        group_id: p.group_id,
+        person_id: p.from_person,
+        kind: 'contribution',
+        amount: p.amount,
+        date: p.date,
+        note: p.note,
+        created_at: p.created_at,
+      }));
+    data.tables.payments = payments.filter((p) => p.kind !== 'contribution');
+  }
   return data;
 }
 
@@ -64,10 +92,13 @@ export async function restoreBackup(db: SQLiteDatabase, backup: Backup) {
       await tx.runAsync(`DELETE FROM ${table}`);
     }
     for (const table of TABLES) {
+      const known = new Set(
+        (await tx.getAllAsync<{ name: string }>(`PRAGMA table_info(${table})`)).map((c) => c.name)
+      );
       for (const row of backup.tables[table] ?? []) {
-        const columns = Object.keys(row);
-        // Column names come from the file, so only allow plain identifiers.
-        if (!columns.every((c) => /^[a-z_]+$/.test(c))) throw new Error('Backup file is corrupted.');
+        // Skip columns that no longer exist (older backups); names come from the file,
+        // so only table columns are ever put into the SQL.
+        const columns = Object.keys(row).filter((c) => known.has(c));
         await tx.runAsync(
           `INSERT INTO ${table} (${columns.join(', ')}) VALUES (${columns.map(() => '?').join(', ')})`,
           columns.map((c) => row[c])

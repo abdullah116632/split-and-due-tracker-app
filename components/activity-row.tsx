@@ -10,17 +10,22 @@ import { Card, Divider } from './ui/card';
 import { ListRow, RowIcon } from './ui/list-row';
 
 function describe(item: ActivityItem) {
-  const person = item.person_is_me ? 'You' : item.person_name;
+  const person = item.person_is_me ? 'You' : (item.person_name ?? '');
   switch (item.kind) {
-    case 'expense':
+    case 'expense': {
+      // Everyone who paid: people out of pocket, plus the fund if it paid a part.
+      const payerCount = (item.payer_count ?? 0) + ((item.fund_amount ?? 0) > 0 ? 1 : 0);
+      const first = item.person_id != null ? person : 'Event fund';
+      const payers = payerCount > 1 ? `${first} +${payerCount - 1}` : first;
       return {
         title: item.title ?? 'Expense',
-        subtitle: `${person} paid · ${item.group_name}`,
+        subtitle: `${payers} paid · ${item.group_name}`,
         icon: 'receipt-outline' as const,
         tone: 'teal' as const,
         amountClass: 'text-slate-900 dark:text-slate-100',
         href: `/expense/new?id=${item.id}` as const,
       };
+    }
     case 'loan': {
       const lent = item.direction === 'lent';
       const extra = item.due_date ? dueLabel(item.due_date) : item.title;
@@ -33,15 +38,39 @@ function describe(item: ActivityItem) {
         href: `/loan/new?id=${item.id}` as const,
       };
     }
+    case 'repayment': {
+      const lent = item.direction === 'lent';
+      return {
+        title: lent ? `${item.person_name} paid you back` : `You paid back ${item.person_name}`,
+        subtitle: item.title ?? 'Debt returned',
+        icon: 'checkmark-done-outline' as const,
+        tone: 'blue' as const,
+        amountClass: 'text-sky-700 dark:text-sky-300',
+        href: `/loan/repay?id=${item.id}` as const,
+      };
+    }
     case 'payment': {
       const to = item.other_is_me ? 'you' : item.other_name;
       return {
         title: `${person} paid ${to}`,
-        subtitle: item.group_name ? `Settle up · ${item.group_name}` : item.title ?? 'Personal settle up',
+        subtitle: item.group_name ? `Settle up · ${item.group_name}` : (item.title ?? 'Personal settle up'),
         icon: 'cash-outline' as const,
         tone: 'blue' as const,
         amountClass: 'text-sky-700 dark:text-sky-300',
         href: `/settle?id=${item.id}` as const,
+      };
+    }
+    case 'fund': {
+      const refund = item.fund_kind === 'refund';
+      return {
+        title: refund
+          ? `${person} ${item.person_is_me ? 'were' : 'was'} refunded`
+          : `${person} added to fund`,
+        subtitle: `${refund ? 'From fund' : 'Event fund'} · ${item.group_name}`,
+        icon: refund ? ('return-down-back-outline' as const) : ('wallet-outline' as const),
+        tone: 'teal' as const,
+        amountClass: 'text-teal-700 dark:text-teal-300',
+        href: `/fund?id=${item.id}` as const,
       };
     }
   }

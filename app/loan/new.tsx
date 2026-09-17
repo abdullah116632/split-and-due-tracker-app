@@ -7,6 +7,7 @@ import { PersonPicker } from '@/components/person-picker';
 import { Button } from '@/components/ui/button';
 import { SegmentedControl } from '@/components/ui/chip';
 import { DateField } from '@/components/ui/date-field';
+import { ReminderField } from '@/components/ui/reminder-field';
 import { Screen } from '@/components/ui/screen';
 import { FieldError, FieldLabel, MoneyField, TextField } from '@/components/ui/text-field';
 import { deleteLoan, getLoan, saveLoan } from '@/db/loans';
@@ -14,6 +15,7 @@ import { listContacts } from '@/db/people';
 import type { LoanDirection } from '@/db/types';
 import { todayISO } from '@/lib/date';
 import { poishaToInput, toPoisha } from '@/lib/money';
+import { cancelReminder, syncLoanReminder } from '@/lib/notifications';
 import { useDbQuery } from '@/lib/use-db-query';
 
 /**
@@ -32,6 +34,10 @@ export default function LoanForm() {
   const [amountText, setAmountText] = useState('');
   const [date, setDate] = useState(todayISO());
   const [dueDate, setDueDate] = useState<string | null>(null);
+  const [reminderAt, setReminderAt] = useState<number | null>(null);
+  const [oldNotificationId, setOldNotificationId] = useState<string | null>(null);
+  const [originalReminderAt, setOriginalReminderAt] = useState<number | null>(null);
+  const [remaining, setRemaining] = useState<number | null>(null);
   const [note, setNote] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
@@ -47,6 +53,10 @@ export default function LoanForm() {
       setAmountText(poishaToInput(loan.amount));
       setDate(loan.date);
       setDueDate(loan.due_date);
+      setReminderAt(loan.reminder_at);
+      setOriginalReminderAt(loan.reminder_at);
+      setOldNotificationId(loan.notification_id);
+      setRemaining(loan.remaining);
       setNote(loan.note ?? '');
     });
   }, [db, editId]);
@@ -57,16 +67,27 @@ export default function LoanForm() {
     if (personId == null) found.person = 'Choose a person.';
     if (amount == null || amount <= 0) found.amount = 'Enter a valid amount.';
     if (dueDate && dueDate < date) found.dueDate = 'Due date can’t be before the date.';
+    // A reminder that already went off may stay as is; a new or changed one must be in the future.
+    if (reminderAt != null && reminderAt !== originalReminderAt && reminderAt <= Date.now()) {
+      found.reminder = 'Pick a time in the future.';
+    }
     setErrors(found);
     if (Object.keys(found).length || personId == null || amount == null) return;
 
     setSaving(true);
     try {
-      await saveLoan(
+      const loanId = await saveLoan(
         db,
-        { personId, direction, amount, date, dueDate, note: note.trim() || null },
+        { personId, direction, amount, date, dueDate, reminderAt, note: note.trim() || null },
         editId
       );
+      // Re-create the reminder so it reflects the latest amount, person and time.
+      if ((await syncLoanReminder(db, loanId)) === 'denied') {
+        Alert.alert(
+          'Reminder not set',
+          'Allow notifications for Split & Due in your phone settings to get reminders.'
+        );
+      }
       router.back();
     } catch (e) {
       Alert.alert('Could not save', (e as Error).message);
@@ -82,6 +103,7 @@ export default function LoanForm() {
         text: 'Delete',
         style: 'destructive',
         onPress: async () => {
+          await cancelReminder(oldNotificationId);
           await deleteLoan(db, editId);
           router.back();
         },
@@ -135,6 +157,7 @@ export default function LoanForm() {
         />
         <FieldError message={errors.dueDate} />
       </View>
+      <ReminderField value={reminderAt} onChange={setReminderAt} dueDate={dueDate} error={errors.reminder} />
       <TextField
         label="Note"
         optional
@@ -144,8 +167,16 @@ export default function LoanForm() {
       />
 
       {editId != null ? (
-        <View className="mt-4">
-          <Button title="Delete record" variant="danger" icon="trash-outline" onPress={remove} />
+        <View className="mt-4 gap-3">
+          {remaining != null && remaining > 0 ? (
+            <Button
+              title="Record a return"
+              icon="checkmark-done-outline"
+              variant="secondary"
+              onPress={() => router.push(`/loan/repay?loanId=${editId}`)}
+            />
+          ) : null}
+          <Button title="Delete debt" variant="danger" icon="trash-outline" onPress={remove} />
         </View>
       ) : null}
     </Screen>

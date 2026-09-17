@@ -13,7 +13,7 @@ import { useRequiredMe } from '@/lib/me-context';
 import { formatMoney } from '@/lib/money';
 import { useDbQuery } from '@/lib/use-db-query';
 
-export default function Groups() {
+export default function Events() {
   const me = useRequiredMe();
   const { data } = useDbQuery(async (db) => {
     const [groups, nets] = await Promise.all([listGroups(db), getAllGroupNets(db)]);
@@ -23,24 +23,24 @@ export default function Groups() {
   return (
     <View className="flex-1">
       <Screen edges={['top']} contentClassName="pb-24">
-        <PageTitle title="Groups" subtitle="Trips, flats, events — split costs together" />
+        <PageTitle title="Events" subtitle="Trips, parties, flats — split costs together" />
         {data && data.length === 0 ? (
           <Card>
             <EmptyState
-              icon="people-outline"
-              title="No groups yet"
-              message="Create a group, add the people involved, then add expenses as they happen."
-              action={<Button title="Create a group" icon="add" onPress={() => router.push('/group/new')} />}
+              icon="calendar-outline"
+              title="No events yet"
+              message="Create an event, add the people involved, then record expenses and contributions."
+              action={<Button title="Create an event" icon="add" onPress={() => router.push('/event/new')} />}
             />
           </Card>
         ) : null}
         {data?.map((g) => (
           <Card key={g.id}>
             <ListRow
-              left={<RowIcon name="people" tone="teal" />}
+              left={<RowIcon name="calendar" tone="teal" />}
               title={g.name}
-              subtitle={`${g.member_count} member${g.member_count === 1 ? '' : 's'} · ${formatMoney(g.total_spent)} spent`}
-              onPress={() => router.push(`/group/${g.id}`)}
+              subtitle={`${g.member_count} ${g.member_count === 1 ? 'person' : 'people'} · ${formatMoney(g.total_spent)} spent`}
+              onPress={() => router.push(`/event/${g.id}`)}
               right={
                 g.isMember ? (
                   <View className="items-end">
@@ -57,7 +57,7 @@ export default function Groups() {
           </Card>
         ))}
       </Screen>
-      <Fab label="New group" onPress={() => router.push('/group/new')} />
+      <Fab label="New event" onPress={() => router.push('/event/new')} />
     </View>
   );
 }
