@@ -1,10 +1,11 @@
 import Ionicons from '@expo/vector-icons/Ionicons';
 import { useSQLiteContext } from 'expo-sqlite';
 import { useState } from 'react';
-import { Alert, Text, View } from 'react-native';
+import { Alert, Image, Text, View } from 'react-native';
 
 import { Button } from '@/components/ui/button';
 import { Screen } from '@/components/ui/screen';
+import { Wordmark } from '@/components/ui/wordmark';
 import { TextField } from '@/components/ui/text-field';
 import { createPerson } from '@/db/people';
 import { useColors } from '@/lib/colors';
@@ -43,10 +44,14 @@ export default function Onboarding() {
       contentClassName="pt-12"
       footer={<Button title="Get started" icon="arrow-forward" onPress={submit} loading={saving} />}>
       <View className="items-center">
-        <View className="h-16 w-16 items-center justify-center rounded-2xl bg-teal-600 dark:bg-teal-400">
-          <Ionicons name="wallet-outline" size={32} color={colors.onPrimary} />
-        </View>
-        <Text className="mt-3 text-2xl font-bold text-slate-900 dark:text-slate-100">Split & Due</Text>
+        {/* Transparent artwork, so the mark sits correctly on both the light and dark background. */}
+        <Image
+          source={require('@/assets/images/splash-icon.png')}
+          style={{ width: 88, height: 88 }}
+          resizeMode="contain"
+          accessibilityIgnoresInvertColors
+        />
+        <Wordmark className="mt-3 text-2xl" />
       </View>
 
       <View className="mt-4 gap-4">

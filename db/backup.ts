@@ -19,7 +19,7 @@ const TABLES = [
 type Row = Record<string, string | number | null>;
 
 export type Backup = {
-  app: 'split-and-due';
+  app: 'sholoana';
   schemaVersion: number;
   exportedAt: string;
   tables: Record<(typeof TABLES)[number], Row[]>;
@@ -36,7 +36,7 @@ export async function exportBackup(db: SQLiteDatabase): Promise<Backup> {
     tables[table] = await db.getAllAsync<Row>(`SELECT * FROM ${table}`);
   }
   return {
-    app: 'split-and-due',
+    app: 'sholoana',
     schemaVersion: await schemaVersion(db),
     exportedAt: new Date().toISOString(),
     tables,
@@ -50,8 +50,8 @@ export async function parseBackup(db: SQLiteDatabase, text: string): Promise<Bac
   } catch {
     throw new Error('This file is not a valid backup.');
   }
-  if (data?.app !== 'split-and-due' || typeof data.tables !== 'object') {
-    throw new Error('This file is not a Split & Due backup.');
+  if (data?.app !== 'sholoana' || typeof data.tables !== 'object') {
+    throw new Error('This file is not a Sholoana backup.');
   }
   if (data.schemaVersion > (await schemaVersion(db))) {
     throw new Error('This backup was made by a newer version of the app. Please update the app first.');

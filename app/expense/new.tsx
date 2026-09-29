@@ -404,7 +404,7 @@ export default function ExpenseForm() {
             {payMode === 'single' && paidBy !== FUND_ID && paidBy != null ? (
               <Text className="mt-1 px-1 text-sm text-slate-500 dark:text-slate-400">
                 {paidBy === me.id ? 'You pay' : `${members.find((m) => m.id === paidBy)?.name} pays`} out of
-                pocket — this counts as {paidBy === me.id ? 'your' : 'their'} contribution to the event.
+                pocket. This counts as {paidBy === me.id ? 'your' : 'their'} contribution to the event.
               </Text>
             ) : null}
             {fundShortBy > 0 ? (
@@ -447,7 +447,7 @@ export default function ExpenseForm() {
                         hitSlop={8}
                         className="flex-row items-center gap-3">
                         <Text className="text-sm text-slate-500 dark:text-slate-400">
-                          {included.includes(p.id) ? formatMoney(share) : '—'}
+                          {included.includes(p.id) ? formatMoney(share) : ''}
                         </Text>
                         <Ionicons
                           name={included.includes(p.id) ? 'checkbox' : 'square-outline'}

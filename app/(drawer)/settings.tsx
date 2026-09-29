@@ -11,6 +11,7 @@ import { Avatar } from '@/components/ui/avatar';
 import { Card, Divider } from '@/components/ui/card';
 import { ListRow, RowIcon } from '@/components/ui/list-row';
 import { PageTitle, Screen, SectionHeader } from '@/components/ui/screen';
+import { Wordmark } from '@/components/ui/wordmark';
 import { exportBackup, parseBackup, restoreBackup } from '@/db/backup';
 import { todayISO } from '@/lib/date';
 import { useMe, useRequiredMe } from '@/lib/me-context';
@@ -25,7 +26,7 @@ export default function Settings() {
     setBusy(true);
     try {
       const backup = await exportBackup(db);
-      const file = new File(Paths.cache, `split-and-due-backup-${todayISO()}.json`);
+      const file = new File(Paths.cache, `sholoana-backup-${todayISO()}.json`);
       file.create({ overwrite: true });
       file.write(JSON.stringify(backup));
       if (!(await Sharing.isAvailableAsync())) {
@@ -116,11 +117,11 @@ export default function Settings() {
       </Card>
       <Text className="px-1 text-sm leading-5 text-slate-500 dark:text-slate-400">
         Everything is stored only on this phone. If you uninstall the app or lose your phone, your
-        data is gone — export a backup regularly.
+        data is gone. Export a backup regularly.
       </Text>
 
       <View className="items-center pt-6">
-        <Text className="text-sm font-semibold text-slate-500 dark:text-slate-400">Split & Due</Text>
+        <Wordmark className="text-sm" />
         <Text className="text-xs text-slate-400">Version {Constants.expoConfig?.version ?? '1.0.0'}</Text>
       </View>
     </Screen>

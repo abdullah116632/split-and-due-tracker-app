@@ -1,5 +1,5 @@
 export type Migration = {
-  /** Must be unique and increasing. Never edit a migration once it has shipped — add a new one. */
+  /** Must be unique and increasing. Never edit a migration once it has shipped. Add a new one. */
   version: number;
   sql: string;
   /** Set when the SQL drops/recreates tables; runs with foreign keys temporarily off. */

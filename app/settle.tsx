@@ -143,9 +143,9 @@ export default function SettleForm() {
   };
 
   const nameOf = (id: number | null) => {
-    if (id == null) return '—';
+    if (id == null) return 'Unknown';
     if (id === me.id) return 'You';
-    return people.find((p) => p.id === id)?.name ?? '—';
+    return people.find((p) => p.id === id)?.name ?? 'Unknown';
   };
 
   const personalBalance = contactId != null ? (personalBalances[contactId] ?? 0) : 0;

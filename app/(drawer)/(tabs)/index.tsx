@@ -14,7 +14,7 @@ type IconName = ComponentProps<typeof Ionicons>['name'];
 const EVENT_STEPS = [
   'Create an event and add people',
   'Add contributions to the event fund',
-  'Add expenses — paid from the fund or by someone',
+  'Add expenses, paid from the fund or by someone',
   'Tap “Settle up” to see who pays or gets back',
 ];
 
@@ -30,7 +30,7 @@ export default function Home() {
 
   return (
     <Screen edges={['top']}>
-      <PageTitle title={`Hi, ${firstName}`} subtitle="Here’s how Split & Due works" />
+      <PageTitle title={`Hi, ${firstName}`} subtitle="Here’s how Sholoana works" />
 
       <GuideCard
         tone="teal"

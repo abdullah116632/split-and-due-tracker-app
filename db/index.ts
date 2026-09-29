@@ -3,7 +3,7 @@ import type { SQLiteDatabase } from 'expo-sqlite';
 import { migrations } from './migrations';
 import { inTransaction } from './tx';
 
-export const DATABASE_NAME = 'split-and-due.db';
+export const DATABASE_NAME = 'sholoana.db';
 
 /**
  * Runs on every app start (SQLiteProvider `onInit`).

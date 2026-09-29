@@ -87,7 +87,7 @@ export default function LoanForm() {
       if ((await syncLoanReminder(db, loanId)) === 'denied') {
         Alert.alert(
           'Reminder not set',
-          'Allow notifications for Split & Due in your phone settings to get reminders.'
+          'Allow notifications for Sholoana in your phone settings to get reminders.'
         );
       }
       router.back();
