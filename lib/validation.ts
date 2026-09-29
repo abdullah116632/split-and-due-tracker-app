@@ -1,3 +1,5 @@
+import { Alert } from 'react-native';
+
 import type { PersonInput } from '@/db/people';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -17,4 +19,14 @@ export function validatePerson(raw: { name: string; phone: string; email: string
   const value: PersonInput | null =
     Object.keys(errors).length === 0 ? { name, phone: phone || null, email: email || null } : null;
   return { value, errors };
+}
+
+/**
+ * Pops up the first validation message. Forms can be taller than the screen, so an inline
+ * error near the top may be out of view when the user taps Save at the bottom.
+ */
+export function alertFirstError(errors: Record<string, string | null | undefined>): boolean {
+  const message = Object.values(errors).find(Boolean);
+  if (message) Alert.alert('Please check', message);
+  return !!message;
 }

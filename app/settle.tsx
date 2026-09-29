@@ -21,6 +21,7 @@ import { useColors } from '@/lib/colors';
 import { todayISO } from '@/lib/date';
 import { useRequiredMe } from '@/lib/me-context';
 import { formatMoney, poishaToInput, toPoisha } from '@/lib/money';
+import { alertFirstError } from '@/lib/validation';
 
 /**
  * Record a settle-up payment.
@@ -113,6 +114,7 @@ export default function SettleForm() {
     else if (from === to) found.people = 'Payer and receiver must be different.';
     if (amount == null || amount <= 0) found.amount = 'Enter a valid amount.';
     setErrors(found);
+    alertFirstError(found);
     if (Object.keys(found).length || from == null || to == null || amount == null) return;
 
     setSaving(true);

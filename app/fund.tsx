@@ -15,6 +15,7 @@ import { getGroup, getGroupMembers } from '@/db/groups';
 import type { FundEntryKind, Person } from '@/db/types';
 import { todayISO } from '@/lib/date';
 import { formatMoney, poishaToInput, toPoisha } from '@/lib/money';
+import { alertFirstError } from '@/lib/validation';
 
 /**
  * Put money into an event's fund, or take money back out of it.
@@ -74,6 +75,7 @@ export default function FundEntryForm() {
     if (personId == null) found.person = isRefund ? 'Who gets the money back?' : 'Who is putting in money?';
     if (amount == null || amount <= 0) found.amount = 'Enter a valid amount.';
     setErrors(found);
+    alertFirstError(found);
     if (Object.keys(found).length || personId == null || amount == null || groupId == null) return;
 
     setSaving(true);

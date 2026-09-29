@@ -5,7 +5,7 @@ import { ActivityIndicator, Pressable, Text } from 'react-native';
 import { cn } from '@/lib/cn';
 import { useColors } from '@/lib/colors';
 
-type Variant = 'primary' | 'secondary' | 'danger' | 'ghost' | 'lightGreen' | 'lightRed';
+type Variant = 'primary' | 'secondary' | 'danger' | 'ghost' | 'lightGreen' | 'lightRed' | 'amber';
 
 const containerClass: Record<Variant, string> = {
   primary: 'bg-teal-600 dark:bg-teal-400',
@@ -14,6 +14,7 @@ const containerClass: Record<Variant, string> = {
   ghost: 'bg-transparent',
   lightGreen: 'bg-emerald-100 dark:bg-emerald-950',
   lightRed: 'bg-rose-100 dark:bg-rose-950',
+  amber: 'bg-amber-500 dark:bg-amber-400',
 };
 
 const textClass: Record<Variant, string> = {
@@ -23,6 +24,7 @@ const textClass: Record<Variant, string> = {
   ghost: 'text-teal-700 dark:text-teal-300',
   lightGreen: 'text-emerald-700 dark:text-emerald-300',
   lightRed: 'text-rose-700 dark:text-rose-300',
+  amber: 'text-white dark:text-amber-950',
 };
 
 type ButtonProps = {
@@ -54,6 +56,7 @@ export function Button({
     ghost: colors.primary,
     lightGreen: colors.positive,
     lightRed: colors.negative,
+    amber: colors.onPrimary === '#ffffff' ? '#ffffff' : '#451a03',
   }[variant];
 
   return (

@@ -8,7 +8,7 @@ import { Screen } from '@/components/ui/screen';
 import { TextField } from '@/components/ui/text-field';
 import { canDeletePerson, createPerson, deletePerson, getPerson, updatePerson } from '@/db/people';
 import { useMe } from '@/lib/me-context';
-import { validatePerson } from '@/lib/validation';
+import { alertFirstError, validatePerson } from '@/lib/validation';
 
 /** Add a contact, or edit one when `?id=` is given (including your own profile). */
 export default function PersonForm() {
@@ -37,6 +37,7 @@ export default function PersonForm() {
   const save = async () => {
     const { value, errors: found } = validatePerson({ name, phone, email });
     setErrors(found);
+    alertFirstError(found);
     if (!value) return;
     setSaving(true);
     try {

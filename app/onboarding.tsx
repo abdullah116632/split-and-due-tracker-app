@@ -8,7 +8,7 @@ import { Screen } from '@/components/ui/screen';
 import { TextField } from '@/components/ui/text-field';
 import { createPerson } from '@/db/people';
 import { useColors } from '@/lib/colors';
-import { validatePerson } from '@/lib/validation';
+import { alertFirstError, validatePerson } from '@/lib/validation';
 import { useMe } from '@/lib/me-context';
 
 export default function Onboarding() {
@@ -24,6 +24,7 @@ export default function Onboarding() {
   const submit = async () => {
     const { value, errors: found } = validatePerson({ name, phone, email });
     setErrors(found);
+    alertFirstError(found);
     if (!value) return;
     setSaving(true);
     try {
@@ -39,23 +40,16 @@ export default function Onboarding() {
   return (
     <Screen
       edges={['top', 'bottom']}
-      contentClassName="pt-10"
+      contentClassName="pt-12"
       footer={<Button title="Get started" icon="arrow-forward" onPress={submit} loading={saving} />}>
       <View className="items-center">
-        <View className="h-20 w-20 items-center justify-center rounded-3xl bg-teal-600 dark:bg-teal-400">
-          <Ionicons name="wallet-outline" size={40} color={colors.onPrimary} />
+        <View className="h-16 w-16 items-center justify-center rounded-2xl bg-teal-600 dark:bg-teal-400">
+          <Ionicons name="wallet-outline" size={32} color={colors.onPrimary} />
         </View>
-        <Text className="mt-5 text-3xl font-bold text-slate-900 dark:text-slate-100">Split & Due</Text>
-        <Text className="mt-2 text-center text-base leading-6 text-slate-500 dark:text-slate-400">
-          Split event expenses and keep track of money you lend and borrow — all on your phone, no
-          account needed.
-        </Text>
+        <Text className="mt-3 text-2xl font-bold text-slate-900 dark:text-slate-100">Split & Due</Text>
       </View>
 
       <View className="mt-4 gap-4">
-        <Text className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-          First, tell us about you
-        </Text>
         <TextField
           label="Your name"
           placeholder="e.g. Abdullah"
@@ -87,12 +81,13 @@ export default function Onboarding() {
           autoCapitalize="none"
           autoComplete="email"
         />
-        <View className="flex-row gap-2 rounded-xl bg-teal-50 p-3 dark:bg-teal-950">
-          <Ionicons name="lock-closed-outline" size={18} color={colors.primary} />
-          <Text className="flex-1 text-sm leading-5 text-teal-900 dark:text-teal-100">
-            Your data stays on this device. Use Settings → Backup to keep a copy safe.
-          </Text>
-        </View>
+      </View>
+
+      <View className="mt-1 flex-row items-center gap-2">
+        <Ionicons name="lock-closed-outline" size={14} color={colors.muted} />
+        <Text className="flex-1 text-xs leading-5 text-slate-500 dark:text-slate-400">
+          Your data stays on this device. Back it up any time from Settings.
+        </Text>
       </View>
     </Screen>
   );

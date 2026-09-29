@@ -59,7 +59,17 @@ export default function EventDetail() {
 
   return (
     <Screen>
-      <EventHeader event={event} members={members} fund={fund} />
+      <EventHeader event={event} />
+
+      <Card tone="tinted" className="flex-row p-4">
+        <Summary label="Spent" value={formatMoney(event.total_spent)} />
+        <View className="mx-4 w-px bg-teal-100 dark:bg-slate-700" />
+        <Summary
+          label="In fund"
+          value={`${fund.balance < 0 ? '−' : ''}${formatMoney(fund.balance)}`}
+          danger={fund.balance < 0}
+        />
+      </Card>
 
       <View className="flex-row gap-2">
         <Button
@@ -138,19 +148,6 @@ export default function EventDetail() {
         </>
       ) : null}
 
-      <SectionHeader title="Expenses" />
-      {expenseRecords.length === 0 ? (
-        <Card>
-          <EmptyState
-            icon="receipt-outline"
-            title="No expenses yet"
-            message="Tap “Add expense” to record what was spent."
-          />
-        </Card>
-      ) : (
-        <ActivityList items={expenseRecords} />
-      )}
-
       <SectionHeader title="Contributions" />
       {moneyRecords.length === 0 ? (
         <Card>
@@ -163,7 +160,37 @@ export default function EventDetail() {
       ) : (
         <ActivityList items={moneyRecords} />
       )}
+
+      <SectionHeader title="Expenses" />
+      {expenseRecords.length === 0 ? (
+        <Card>
+          <EmptyState
+            icon="receipt-outline"
+            title="No expenses yet"
+            message="Tap “Add expense” to record what was spent."
+          />
+        </Card>
+      ) : (
+        <ActivityList items={expenseRecords} />
+      )}
     </Screen>
+  );
+}
+
+function Summary({ label, value, danger }: { label: string; value: string; danger?: boolean }) {
+  return (
+    <View className="flex-1">
+      <Text className="text-xs text-slate-500 dark:text-slate-400">{label}</Text>
+      <Text
+        className={
+          danger
+            ? 'mt-0.5 text-xl font-bold text-rose-600 dark:text-rose-400'
+            : 'mt-0.5 text-xl font-bold text-slate-900 dark:text-slate-100'
+        }
+        numberOfLines={1}>
+        {value}
+      </Text>
+    </View>
   );
 }
 

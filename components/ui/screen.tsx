@@ -52,7 +52,7 @@ export function Screen({
 }
 
 /** Opens the side drawer (People, Settings). */
-export function MenuButton() {
+export function MenuButton({ className }: { className?: string }) {
   const navigation = useNavigation();
   const colors = useColors();
   return (
@@ -61,7 +61,10 @@ export function MenuButton() {
       accessibilityLabel="Open menu"
       hitSlop={8}
       onPress={() => navigation.dispatch(DrawerActions.openDrawer())}
-      className="-ml-1 mr-3 h-10 w-10 items-center justify-center rounded-full active:bg-slate-200 dark:active:bg-slate-800">
+      className={cn(
+        'h-10 w-10 items-center justify-center rounded-full active:bg-slate-200 dark:active:bg-slate-800',
+        className ?? '-ml-1 mr-3'
+      )}>
       <Ionicons name="menu" size={26} color={colors.text} />
     </Pressable>
   );

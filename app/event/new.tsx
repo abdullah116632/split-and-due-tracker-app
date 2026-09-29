@@ -15,6 +15,7 @@ import { listContacts } from '@/db/people';
 import { useColors } from '@/lib/colors';
 import { useRequiredMe } from '@/lib/me-context';
 import { useDbQuery } from '@/lib/use-db-query';
+import { alertFirstError } from '@/lib/validation';
 
 const same = (a: string, b: string) => a.trim().toLowerCase() === b.trim().toLowerCase();
 
@@ -82,6 +83,7 @@ export default function EventForm() {
     if (query.trim()) found.people = 'Tap “Add” to add the name you typed.';
     else if (peopleCount < 2) found.people = 'An event needs at least two people.';
     setErrors(found);
+    alertFirstError(found);
     if (Object.values(found).some(Boolean)) return;
 
     const memberIds = includeMe ? [me.id, ...selectedIds] : selectedIds;

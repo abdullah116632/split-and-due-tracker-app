@@ -1,5 +1,6 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 
+import { inTransaction } from './tx';
 import type { Expense, ExpensePayer, ExpenseSplit, SplitType } from './types';
 
 export type ExpenseInput = {
@@ -39,7 +40,7 @@ export async function saveExpense(db: SQLiteDatabase, input: ExpenseInput, id?: 
     throw new Error('Amounts paid must add up to the total amount.');
   }
 
-  await db.withExclusiveTransactionAsync(async (tx) => {
+  await inTransaction(db, async (tx) => {
     let expenseId = id;
     if (expenseId == null) {
       const result = await tx.runAsync(

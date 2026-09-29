@@ -17,6 +17,7 @@ import { todayISO } from '@/lib/date';
 import { poishaToInput, toPoisha } from '@/lib/money';
 import { cancelReminder, syncLoanReminder } from '@/lib/notifications';
 import { useDbQuery } from '@/lib/use-db-query';
+import { alertFirstError } from '@/lib/validation';
 
 /**
  * Record money lent to / borrowed from a contact.
@@ -72,6 +73,7 @@ export default function LoanForm() {
       found.reminder = 'Pick a time in the future.';
     }
     setErrors(found);
+    alertFirstError(found);
     if (Object.keys(found).length || personId == null || amount == null) return;
 
     setSaving(true);

@@ -19,6 +19,7 @@ import {
 import { formatDate, todayISO } from '@/lib/date';
 import { formatMoney, poishaToInput, toPoisha } from '@/lib/money';
 import { syncLoanReminder } from '@/lib/notifications';
+import { alertFirstError } from '@/lib/validation';
 
 /** Record money returned against a debt (`?loanId=`), or edit a return (`?id=`). */
 export default function RepaymentForm() {
@@ -61,8 +62,14 @@ export default function RepaymentForm() {
 
   const save = async () => {
     const amount = toPoisha(amountText);
-    if (amount == null || amount <= 0) return setError('Enter a valid amount.');
-    if (amount > maxAmount) return setError(`Only ${formatMoney(maxAmount)} is still owed.`);
+    const problem =
+      amount == null || amount <= 0
+        ? 'Enter a valid amount.'
+        : amount > maxAmount
+          ? `Only ${formatMoney(maxAmount)} is still owed.`
+          : null;
+    setError(problem);
+    if (alertFirstError({ amount: problem }) || amount == null) return;
     if (loanId == null) return;
     setError(null);
     setSaving(true);

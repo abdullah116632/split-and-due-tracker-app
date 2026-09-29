@@ -1,5 +1,7 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 
+import { inTransaction } from './tx';
+
 // Parent tables first: this is the insert order on restore (and reverse is the delete order).
 const TABLES = [
   'people',
@@ -87,7 +89,7 @@ export async function parseBackup(db: SQLiteDatabase, text: string): Promise<Bac
 
 /** Replaces ALL local data with the backup's contents. */
 export async function restoreBackup(db: SQLiteDatabase, backup: Backup) {
-  await db.withExclusiveTransactionAsync(async (tx) => {
+  await inTransaction(db, async (tx) => {
     for (const table of [...TABLES].reverse()) {
       await tx.runAsync(`DELETE FROM ${table}`);
     }

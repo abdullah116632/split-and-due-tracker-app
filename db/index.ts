@@ -1,6 +1,7 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 
 import { migrations } from './migrations';
+import { inTransaction } from './tx';
 
 export const DATABASE_NAME = 'split-and-due.db';
 
@@ -20,9 +21,10 @@ export async function initDatabase(db: SQLiteDatabase) {
 
     // Table rebuilds must run with foreign keys off (it can't be changed inside a
     // transaction), otherwise DROP TABLE would cascade-delete child rows.
+    // inTransaction uses this same connection, so the setting applies.
     if (migration.rebuildsTables) await db.execAsync('PRAGMA foreign_keys = OFF');
     try {
-      await db.withExclusiveTransactionAsync(async (tx) => {
+      await inTransaction(db, async (tx) => {
         await tx.execAsync(migration.sql);
         if (migration.rebuildsTables) {
           const broken = await tx.getAllAsync('PRAGMA foreign_key_check');

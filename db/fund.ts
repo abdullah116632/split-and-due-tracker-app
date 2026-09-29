@@ -99,3 +99,16 @@ export async function getFundSummary(db: SQLiteDatabase, groupId: number): Promi
     totalContributed: contributions.reduce((sum, r) => sum + r.amount, 0),
   };
 }
+
+/** Cash currently in each event's fund, keyed by event id. */
+export async function listFundBalances(db: SQLiteDatabase) {
+  const rows = await db.getAllAsync<{ group_id: number; balance: number }>(
+    `SELECT group_id, SUM(amount) AS balance FROM (
+       SELECT group_id, CASE kind WHEN 'contribution' THEN amount ELSE -amount END AS amount
+       FROM fund_entries
+       UNION ALL
+       SELECT group_id, -fund_amount FROM expenses WHERE fund_amount > 0
+     ) GROUP BY group_id`
+  );
+  return Object.fromEntries(rows.map((r) => [r.group_id, r.balance])) as Record<number, number>;
+}

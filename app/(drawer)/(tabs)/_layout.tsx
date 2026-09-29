@@ -10,6 +10,7 @@ const TABS: { name: string; title: string; icon: IconName; activeIcon: IconName 
   { name: 'index', title: 'Home', icon: 'home-outline', activeIcon: 'home' },
   { name: 'events', title: 'Events', icon: 'calendar-outline', activeIcon: 'calendar' },
   { name: 'debts', title: 'Debts', icon: 'swap-vertical-outline', activeIcon: 'swap-vertical' },
+  { name: 'calculator', title: 'Calculator', icon: 'calculator-outline', activeIcon: 'calculator' },
 ];
 
 export default function TabLayout() {

@@ -2,9 +2,18 @@
 
 export const CURRENCY = '৳';
 
-/** Parses user input like "1,250.5" into poisha. Returns null for invalid input. */
+/** Converts Bangla (০-৯) and Arabic-Indic digits, as typed on local keyboards, to 0-9. */
+export function normalizeDigits(input: string): string {
+  return input
+    .replace(/[০-৯]/g, (d) => String(d.charCodeAt(0) - 0x09e6))
+    .replace(/[٠-٩]/g, (d) => String(d.charCodeAt(0) - 0x0660))
+    .replace(/[۰-۹]/g, (d) => String(d.charCodeAt(0) - 0x06f0))
+    .replace(/[٫]/g, '.');
+}
+
+/** Parses user input like "1,250.5" (or "১২৫০.৫") into poisha. Returns null for invalid input. */
 export function toPoisha(input: string): number | null {
-  const s = input.replace(/,/g, '').trim();
+  const s = normalizeDigits(input).replace(/[,\s]/g, '');
   if (!/^\d*(\.\d{0,2})?$/.test(s) || s === '' || s === '.') return null;
   const [whole, frac = ''] = s.split('.');
   return Number(whole || '0') * 100 + Number((frac + '00').slice(0, 2));
@@ -18,7 +27,7 @@ export function poishaToInput(poisha: number): string {
 }
 
 /** Bangladeshi digit grouping: 1234567 -> "12,34,567". */
-function groupDigits(n: number): string {
+export function groupDigits(n: number): string {
   const s = String(n);
   if (s.length <= 3) return s;
   const last3 = s.slice(-3);

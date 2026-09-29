@@ -1,5 +1,6 @@
 import type { SQLiteDatabase } from 'expo-sqlite';
 
+import { inTransaction } from './tx';
 import type { Group, Person } from './types';
 
 export type GroupListItem = Group & { member_count: number; total_spent: number };
@@ -51,10 +52,9 @@ export async function isMemberInvolved(db: SQLiteDatabase, groupId: number, pers
 
 // In the UI a "group" is called an Event.
 
-type Tx = Parameters<Parameters<SQLiteDatabase['withExclusiveTransactionAsync']>[0]>[0];
 
 /** Creates contacts for names typed in the event form and returns their ids. */
-async function insertNewPeople(tx: Tx, names: string[]) {
+async function insertNewPeople(tx: SQLiteDatabase, names: string[]) {
   const ids: number[] = [];
   for (const name of names) {
     const result = await tx.runAsync(
@@ -78,7 +78,7 @@ export async function createGroup(
   newNames: string[] = []
 ) {
   let groupId = 0;
-  await db.withExclusiveTransactionAsync(async (tx) => {
+  await inTransaction(db, async (tx) => {
     const result = await tx.runAsync(
       'INSERT INTO expense_groups (name, created_at) VALUES (?, ?)',
       name,
@@ -124,7 +124,7 @@ export async function updateGroup(
     }
   }
 
-  await db.withExclusiveTransactionAsync(async (tx) => {
+  await inTransaction(db, async (tx) => {
     await tx.runAsync('UPDATE expense_groups SET name = ? WHERE id = ?', name, groupId);
     for (const personId of toRemove) {
       await tx.runAsync(
@@ -154,4 +154,15 @@ export function listGroupsForPerson(db: SQLiteDatabase, personId: number) {
      WHERE m.person_id = ? ORDER BY g.created_at DESC`,
     personId
   );
+}
+
+/** Members of every event, keyed by event id ("me" first). */
+export async function listAllGroupMembers(db: SQLiteDatabase) {
+  const rows = await db.getAllAsync<Person & { group_id: number }>(
+    `SELECT p.*, m.group_id FROM group_members m JOIN people p ON p.id = m.person_id
+     ORDER BY p.is_me DESC, p.name COLLATE NOCASE`
+  );
+  const result: Record<number, Person[]> = {};
+  for (const { group_id, ...person } of rows) (result[group_id] ??= []).push(person);
+  return result;
 }

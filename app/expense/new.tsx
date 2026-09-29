@@ -20,8 +20,9 @@ import { cn } from '@/lib/cn';
 import { useColors } from '@/lib/colors';
 import { todayISO } from '@/lib/date';
 import { useRequiredMe } from '@/lib/me-context';
-import { allocate, formatMoney, poishaToInput, toPoisha } from '@/lib/money';
+import { allocate, formatMoney, normalizeDigits, poishaToInput, toPoisha } from '@/lib/money';
 import { useDbQuery } from '@/lib/use-db-query';
+import { alertFirstError } from '@/lib/validation';
 
 type ShareResult = {
   shares: Record<number, number>;
@@ -76,7 +77,7 @@ function computeShares(
   for (const id of memberIds) {
     const raw = percent[id]?.trim();
     if (!raw) continue;
-    const value = Number(raw);
+    const value = Number(normalizeDigits(raw));
     if (!Number.isFinite(value) || value < 0) {
       return { shares, percents, problem: 'One of the percentages is not valid.' };
     }
@@ -238,6 +239,7 @@ export default function ExpenseForm() {
     if (!found.amount && payerResult.problem) found.paidBy = payerResult.problem;
     if (!found.amount && result.problem) found.split = result.problem;
     setErrors(found);
+    alertFirstError(found);
     if (Object.keys(found).length || groupId == null || total == null) return;
 
     setSaving(true);
