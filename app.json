@@ -15,6 +15,7 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "predictiveBackGestureEnabled": false,
+      "versionCode": 1,
       "package": "com.sholoana.app"
     },
     "web": {
